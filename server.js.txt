@@ -1,0 +1,43 @@
+const express = require("express");
+const { Connection, PublicKey } = require("@solana/web3.js");
+const cors = require("cors");
+
+const app = express();
+const port = process.env.PORT || 3000;
+
+app.use(cors());
+app.use(express.json());
+
+// Use a paid RPC provider to avoid rate limits (replace with your QuickNode URL)
+const connection = new Connection("https://your-quicknode-rpc-url");
+
+app.post("/get-transactions", async (req, res) => {
+    const { walletAddress } = req.body;
+
+    try {
+        console.log(`Received request for wallet: ${walletAddress}`);
+        const wallet = new PublicKey(walletAddress);
+        console.log("Fetching signatures...");
+        const transactions = await connection.getSignaturesForAddress(wallet, { limit: 10 });
+        console.log(`Found ${transactions.length} transactions`);
+
+        if (transactions.length === 0) {
+            return res.json({ success: true, transactions: [], message: "No recent transactions found." });
+        }
+
+        const detailedTransactions = transactions.map(tx => ({
+            signature: tx.signature,
+            date: new Date(tx.blockTime * 1000).toLocaleString(),
+            status: tx.err ? "Failed" : "Success"
+        }));
+
+        res.json({ success: true, transactions: detailedTransactions });
+    } catch (error) {
+        console.error("Error fetching transactions:", error);
+        res.status(500).json({ success: false, message: "Error fetching transactions: " + error.message });
+    }
+});
+
+app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+});
