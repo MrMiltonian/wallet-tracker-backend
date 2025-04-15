@@ -9,8 +9,7 @@ app.use(cors());
 app.use(express.json());
 
 // Use a paid RPC provider to avoid rate limits (replace with your QuickNode URL)
-const connection = new Connection("https://your-quicknode-rpc-url");
-
+const connection = new Connection("https://solennm-misty-diamond.solana-mainnet.quiknode.pro/");
 app.post("/get-transactions", async (req, res) => {
     const { walletAddress } = req.body;
 
